@@ -67,8 +67,8 @@ My Wordmate는 사용자별로 독립적인 단어 학습을 제공하는 웹 �
 
 1. 프로젝트 클론
 ```bash
-git clone [repository-url]
-cd 커서AI(나만의단어장)
+git clone https://github.com/etjeon09/wordmate_ver2.git
+cd wordmate_ver2
 ```
 
 2. 브라우저에서 실행
@@ -129,4 +129,4 @@ npx serve .
 
 ---
 
-**Made with ❤️ by [Your Name]**
+**Made with ❤️ by etjeon09**
