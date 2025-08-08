@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wordmate - 나만의 스마트 단어장</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .quiz-option:hover { transform: translateY(-2px); transition: all 0.2s; }
+        .word-card { transition: all 0.3s ease; }
+        .word-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">🔐 My Wordmate 로그인</h2>
+            
+            <!-- 로그인 폼 -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">사용자명</label>
+                    <input type="text" id="loginUsername" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all" placeholder="사용자명을 입력하세요" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">비밀번호</label>
+                    <input type="password" id="loginPassword" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all" placeholder="비밀번호를 입력하세요" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-600 transition-all">
+                    로그인
+                </button>
+            </form>
+            
+            <div class="text-center mt-4">
+                <button onclick="showRegisterForm()" class="text-blue-500 hover:text-blue-700 text-sm">
+                    계정이 없으신가요? 회원가입
+                </button>
+            </div>
+            
+            <div id="loginMessage" class="mt-4 text-center text-sm"></div>
+        </div>
+    </div>
+
+    <!-- 회원가입 모달 -->
+    <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">📝 회원가입</h2>
+            
+            <!-- 회원가입 폼 -->
+            <form id="registerForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">사용자명</label>
+                    <input type="text" id="registerUsername" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all" placeholder="사용자명을 입력하세요" required>
+                    <div id="usernameCheck" class="text-xs mt-1"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">비밀번호</label>
+                    <input type="password" id="registerPassword" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all" placeholder="비밀번호를 입력하세요 (6자 이상)" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">비밀번호 확인</label>
+                    <input type="password" id="registerPasswordConfirm" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all" placeholder="비밀번호를 다시 입력하세요" required>
+                </div>
+                <button type="submit" class="w-full bg-green-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-green-600 transition-all">
+                    회원가입
+                </button>
+            </form>
+            
+            <div class="text-center mt-4">
+                <button onclick="showLoginForm()" class="text-blue-500 hover:text-blue-700 text-sm">
+                    이미 계정이 있으신가요? 로그인
+                </button>
+            </div>
+            
+            <div id="registerMessage" class="mt-4 text-center text-sm"></div>
+        </div>
+    </div>
+
+    <!-- 언어 선택 모달 -->
+    <div id="languageModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">학습할 언어를 선택하세요</h2>
+            <div class="grid grid-cols-3 gap-3">
+                <button onclick="selectLanguage('en', 'English')" class="p-3 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all">
+                    <div class="text-xl mb-1">🇺🇸</div>
+                    <div class="font-semibold text-sm">English</div>
+                </button>
+                <button onclick="selectLanguage('es', 'Español')" class="p-3 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all">
+                    <div class="text-xl mb-1">🇪🇸</div>
+                    <div class="font-semibold text-sm">Español</div>
+                </button>
+                <button onclick="selectLanguage('fr', 'Français')" class="p-3 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all">
+                    <div class="text-xl mb-1">🇫🇷</div>
+                    <div class="font-semibold text-sm">Français</div>
+                </button>
+                <button onclick="selectLanguage('de', 'Deutsch')" class="p-3 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all">
+                    <div class="text-xl mb-1">🇩🇪</div>
+                    <div class="font-semibold text-sm">Deutsch</div>
+                </button>
+                <button onclick="selectLanguage('ja', '日本語')" class="p-3 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all">
+                    <div class="text-xl mb-1">🇯🇵</div>
+                    <div class="font-semibold text-sm">日本語</div>
+                </button>
+                <button onclick="selectLanguage('zh', '中文')" class="p-3 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all">
+                    <div class="text-xl mb-1">🇨🇳</div>
+                    <div class="font-semibold text-sm">中文</div>
+                </button>
+                <button onclick="selectLanguage('it', 'Italiano')" class="p-3 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all">
+                    <div class="text-xl mb-1">🇮🇹</div>
+                    <div class="font-semibold text-sm">Italiano</div>
+                </button>
+                <button onclick="selectLanguage('pt', 'Português')" class="p-3 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all">
+                    <div class="text-xl mb-1">🇵🇹</div>
+                    <div class="font-semibold text-sm">Português</div>
+                </button>
+                <button onclick="selectLanguage('ru', 'Русский')" class="p-3 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all">
+                    <div class="text-xl mb-1">🇷🇺</div>
+                    <div class="font-semibold text-sm">Русский</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 헤더 -->
+        <div class="text-center mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-gray-600">👤 <span id="currentUserDisplay" class="font-semibold"></span></span>
+                    <button onclick="logout()" class="text-red-500 hover:text-red-700 text-sm">로그아웃</button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="showUserSwitch()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm transition-all">
+                        🔄 사용자 전환
+                    </button>
+                </div>
+            </div>
+            <div class="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+                <div class="text-5xl">📖</div>
+                <h1 class="text-5xl font-black tracking-tight">My Wordmate</h1>
+                <div class="text-5xl">✨</div>
+            </div>
+            <p class="text-gray-600 text-lg">당신만의 스마트 단어 학습 파트너</p>
+            <p class="text-gray-500 text-sm mt-2">선택한 언어: <span id="selectedLanguage" class="font-semibold text-blue-600"></span></p>
+        </div>
+
+        <!-- 탭 네비게이션 -->
+        <div class="flex flex-wrap justify-center mb-8 bg-white rounded-2xl p-2 shadow-lg">
+            <button onclick="showTab('add')" id="addTab" class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all bg-blue-500 text-white">단어 추가</button>
+            <button onclick="showTab('list')" id="listTab" class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all text-gray-600 hover:bg-gray-100">단어 목록</button>
+            <button onclick="showTab('quiz')" id="quizTab" class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all text-gray-600 hover:bg-gray-100">퀴즈</button>
+            <button onclick="showTab('hardQuiz')" id="hardQuizTab" class="tab-btn px-6 py-3 rounded-xl font-semibold transition-all text-gray-600 hover:bg-gray-100">고급 퀴즈</button>
+        </div>
+
+        <!-- 단어 추가 탭 -->
+        <div id="addSection" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">새 단어 추가</h2>
+                <form id="wordForm" class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">단어</label>
+                            <input type="text" id="wordInput" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all" placeholder="새로운 단어를 입력하세요" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">뜻 (한국어)</label>
+                            <input type="text" id="meaningInput" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all" placeholder="단어의 뜻을 입력하세요" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">예문</label>
+                        <textarea id="exampleInput" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all h-24" placeholder="예문을 입력하세요"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-4 px-8 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg">
+                        📝 단어 추가하기
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 단어 목록 탭 -->
+        <div id="listSection" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <div class="flex flex-wrap justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">단어 목록</h2>
+                    <div class="flex gap-4 mt-4 md:mt-0">
+                        <input type="date" id="dateFilter" class="p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none">
+                        <button onclick="filterByDate()" class="bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-all">날짜별 보기</button>
+                        <button onclick="showAllWords()" class="bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-all">전체 보기</button>
+                    </div>
+                </div>
+                <div id="wordsList" class="space-y-4">
+                    <p class="text-gray-500 text-center py-8">아직 추가된 단어가 없습니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 퀴즈 탭 -->
+        <div id="quizSection" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">객관식 퀴즈</h2>
+                <div id="quizContent">
+                    <p class="text-gray-500 text-center py-8">퀴즈를 시작하려면 최소 4개의 단어가 필요합니다.</p>
+                    <button onclick="startQuiz()" class="w-full bg-green-500 text-white font-bold py-4 px-8 rounded-xl hover:bg-green-600 transition-all transform hover:scale-105 shadow-lg">
+                        🎯 퀴즈 시작하기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 고급 퀴즈 탭 -->
+        <div id="hardQuizSection" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">주관식 퀴즈</h2>
+                <div id="hardQuizContent">
+                    <p class="text-gray-500 text-center py-8">고급 퀴즈를 시작하려면 최소 1개의 단어가 필요합니다.</p>
+                    <button onclick="startHardQuiz()" class="w-full bg-purple-500 text-white font-bold py-4 px-8 rounded-xl hover:bg-purple-600 transition-all transform hover:scale-105 shadow-lg">
+                        🧠 고급 퀴즈 시작하기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLanguage = '';
+        let currentUser = '';
+        let words = [];
+        let currentQuizWord = null;
+        let currentHardQuizWord = null;
+        let quizWordPool = [];
+        let hardQuizWordPool = [];
+        let quizRound = 1;
+        let hardQuizRound = 1;
+        let hardQuizScore = 0;
+        let hardQuizTotal = 0;
+        let roundScores = [];
+        let currentRoundWrongAnswers = [];
+
+        // 비밀번호 해시 함수 (간단한 해시)
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // 32bit 정수로 변환
+            }
+            return hash.toString();
+        }
+
+        // 사용자명 중복 체크
+        function checkUsernameAvailability(username) {
+            const users = JSON.parse(localStorage.getItem('appUsers') || '{}');
+            return !users.hasOwnProperty(username);
+        }
+
+        // 사용자 등록
+        function registerUser(username, password) {
+            if (!checkUsernameAvailability(username)) {
+                return { success: false, message: '이미 존재하는 사용자명입니다.' };
+            }
+            
+            if (password.length < 6) {
+                return { success: false, message: '비밀번호는 6자 이상이어야 합니다.' };
+            }
+            
+            // 비밀번호 해시화
+            const passwordHash = simpleHash(password);
+            
+            // 사용자 정보 저장
+            const users = JSON.parse(localStorage.getItem('appUsers') || '{}');
+            users[username] = {
+                passwordHash: passwordHash,
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString()
+            };
+            
+            localStorage.setItem('appUsers', JSON.stringify(users));
+            
+            // 사용자별 데이터 초기화
+            localStorage.setItem(`userData_${username}`, JSON.stringify({
+                words: [],
+                quizResults: [],
+                roundScores: [],
+                settings: { language: '' }
+            }));
+            
+            return { success: true };
+        }
+
+        // 사용자 로그인
+        function loginUser(username, password) {
+            const users = JSON.parse(localStorage.getItem('appUsers') || '{}');
+            const user = users[username];
+            
+            if (!user) {
+                return { success: false, message: '존재하지 않는 사용자명입니다.' };
+            }
+            
+            const passwordHash = simpleHash(password);
+            if (user.passwordHash !== passwordHash) {
+                return { success: false, message: '비밀번호가 일치하지 않습니다.' };
+            }
+            
+            // 로그인 성공
+            user.lastLogin = new Date().toISOString();
+            localStorage.setItem('appUsers', JSON.stringify(users));
+            
+            // 현재 사용자 설정
+            currentUser = username;
+            localStorage.setItem('currentUser', username);
+            
+            // 사용자 데이터 로드
+            loadUserData(username);
+            
+            return { success: true };
+        }
+
+        // 사용자 데이터 로드
+        function loadUserData(username) {
+            const userData = JSON.parse(localStorage.getItem(`userData_${username}`) || '{}');
+            words = userData.words || [];
+            roundScores = userData.roundScores || [];
+            
+            // 언어 설정 로드
+            if (userData.settings && userData.settings.language) {
+                currentLanguage = userData.settings.language;
+                const savedLanguage = JSON.parse(localStorage.getItem('selectedLanguage') || 'null');
+                if (savedLanguage) {
+                    document.getElementById('selectedLanguage').textContent = savedLanguage.name;
+                }
+            }
+            
+            // UI 업데이트
+            document.getElementById('currentUserDisplay').textContent = username;
+            displayWords();
+        }
+
+        // 사용자 데이터 저장
+        function saveUserData() {
+            if (!currentUser) return;
+            
+            const userData = {
+                words: words,
+                roundScores: roundScores,
+                settings: { 
+                    language: currentLanguage 
+                }
+            };
+            localStorage.setItem(`userData_${currentUser}`, JSON.stringify(userData));
+        }
+
+        // 로그아웃
+        function logout() {
+            if (confirm('정말로 로그아웃하시겠습니까?')) {
+                saveUserData();
+                currentUser = '';
+                currentLanguage = '';
+                words = [];
+                roundScores = [];
+                localStorage.removeItem('currentUser');
+                
+                // 로그인 모달 표시
+                document.getElementById('loginModal').classList.remove('hidden');
+                document.getElementById('currentUserDisplay').textContent = '';
+                document.getElementById('selectedLanguage').textContent = '';
+                displayWords();
+            }
+        }
+
+        // 사용자 전환
+        function showUserSwitch() {
+            const users = JSON.parse(localStorage.getItem('appUsers') || '{}');
+            const userList = Object.keys(users);
+            
+            if (userList.length <= 1) {
+                showMessage('전환할 다른 사용자가 없습니다.', 'error');
+                return;
+            }
+            
+            const switchUser = prompt('전환할 사용자명을 입력하세요:\n\n사용 가능한 사용자: ' + userList.join(', '));
+            
+            if (switchUser && userList.includes(switchUser)) {
+                saveUserData();
+                currentUser = switchUser;
+                localStorage.setItem('currentUser', switchUser);
+                loadUserData(switchUser);
+                showMessage(`${switchUser} 사용자로 전환되었습니다.`, 'success');
+            }
+        }
+
+        // 모달 전환 함수들
+        function showRegisterForm() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('registerModal').classList.remove('hidden');
+        }
+
+        function showLoginForm() {
+            document.getElementById('registerModal').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        // 언어 선택
+        function selectLanguage(code, name) {
+            currentLanguage = code;
+            document.getElementById('selectedLanguage').textContent = name;
+            document.getElementById('languageModal').classList.add('hidden');
+            localStorage.setItem('selectedLanguage', JSON.stringify({code, name}));
+            
+            // 사용자 설정에 언어 저장
+            if (currentUser) {
+                saveUserData();
+            }
+        }
+
+        // 페이지 로드 시 초기화
+        window.onload = function() {
+            // 기존 사용자 확인
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = savedUser;
+                loadUserData(savedUser);
+                document.getElementById('loginModal').classList.add('hidden');
+            } else {
+                // 로그인 모달 표시
+                document.getElementById('loginModal').classList.remove('hidden');
+            }
+        };
+
+        // 탭 전환
+        function showTab(tabName) {
+            // 모든 탭 콘텐츠 숨기기
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            // 모든 탭 버튼 비활성화
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('text-gray-600');
+            });
+            
+            // 선택된 탭 표시
+            document.getElementById(tabName + 'Section').classList.remove('hidden');
+            document.getElementById(tabName + 'Tab').classList.add('bg-blue-500', 'text-white');
+            document.getElementById(tabName + 'Tab').classList.remove('text-gray-600');
+        }
+
+        // 단어 추가
+        document.getElementById('wordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const word = document.getElementById('wordInput').value.trim();
+            const meaning = document.getElementById('meaningInput').value.trim();
+            const example = document.getElementById('exampleInput').value.trim();
+            
+            if (!word || !meaning) return;
+            
+            const newWord = {
+                id: Date.now(),
+                word: word,
+                meaning: meaning,
+                example: example,
+                date: new Date().toISOString().split('T')[0],
+                language: currentLanguage
+            };
+            
+            saveWord(newWord);
+        });
+
+        function saveWord(word) {
+            words.push(word);
+            saveUserData();
+            
+            // 폼 초기화
+            document.getElementById('wordForm').reset();
+            
+            // 성공 메시지
+            showMessage('단어가 성공적으로 추가되었습니다! 🎉', 'success');
+            
+            // 목록 업데이트
+            displayWords();
+        }
+
+        // 단어 목록 표시
+        function displayWords(filteredWords = null) {
+            const wordsToShow = filteredWords || words;
+            const wordsList = document.getElementById('wordsList');
+            
+            if (wordsToShow.length === 0) {
+                wordsList.innerHTML = '<p class="text-gray-500 text-center py-8">표시할 단어가 없습니다.</p>';
+                return;
+            }
+            
+            wordsList.innerHTML = wordsToShow.map(word => `
+                <div class="word-card bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+                    <div class="flex flex-wrap items-start justify-between gap-4">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-3 mb-3">
+                                <h3 class="text-xl font-bold text-gray-800">${word.word}</h3>
+                                <button onclick="speakWord(\`${word.word}\`)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-lg transition-all" title="발음 듣기">
+                                    🔊
+                                </button>
+                            </div>
+                            <p class="text-gray-600 mb-2"><strong>뜻:</strong> ${word.meaning}</p>
+                            ${word.example ? `<p class="text-gray-600 mb-2"><strong>예문:</strong> ${word.example}</p>` : ''}
+                            <p class="text-sm text-gray-400">추가일: ${word.date}</p>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="editWord(${word.id})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition-all">수정</button>
+                            <button onclick="deleteWord(${word.id})" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all">삭제</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 발음 기능
+        function speakWord(word) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = getLanguageCode(currentLanguage);
+                speechSynthesis.speak(utterance);
+            } else {
+                showMessage('음성 기능을 지원하지 않는 브라우저입니다.', 'error');
+            }
+        }
+
+        function getLanguageCode(lang) {
+            const codes = {
+                'en': 'en-US',
+                'es': 'es-ES',
+                'fr': 'fr-FR',
+                'de': 'de-DE',
+                'ja': 'ja-JP',
+                'zh': 'zh-CN',
+                'it': 'it-IT',
+                'pt': 'pt-PT',
+                'ru': 'ru-RU'
+            };
+            return codes[lang] || 'en-US';
+        }
+
+        // 단어 삭제
+        function deleteWord(id) {
+            if (confirm('정말로 이 단어를 삭제하시겠습니까?')) {
+                words = words.filter(word => word.id !== id);
+                saveUserData();
+                displayWords();
+                showMessage('단어가 삭제되었습니다.', 'success');
+            }
+        }
+
+        // 단어 수정
+        function editWord(id) {
+            const word = words.find(w => w.id === id);
+            if (!word) return;
+            
+            const newWord = prompt('새로운 단어:', word.word);
+            const newMeaning = prompt('새로운 뜻:', word.meaning);
+            
+            if (newWord && newMeaning) {
+                word.word = newWord.trim();
+                word.meaning = newMeaning.trim();
+                saveUserData();
+                displayWords();
+                showMessage('단어가 수정되었습니다.', 'success');
+            }
+        }
+
+        // 날짜별 필터링
+        function filterByDate() {
+            const selectedDate = document.getElementById('dateFilter').value;
+            if (!selectedDate) {
+                showMessage('날짜를 선택해주세요.', 'error');
+                return;
+            }
+            
+            const filteredWords = words.filter(word => word.date === selectedDate);
+            displayWords(filteredWords);
+        }
+
+        // 전체 단어 보기
+        function showAllWords() {
+            document.getElementById('dateFilter').value = '';
+            displayWords();
+        }
+
+        // 객관식 퀴즈 시작
+        function startQuiz() {
+            if (words.length < 4) {
+                showMessage('퀴즈를 시작하려면 최소 4개의 단어가 필요합니다.', 'error');
+                return;
+            }
+            
+            // 새로운 라운드 시작 시 단어 풀 초기화
+            if (quizWordPool.length === 0) {
+                quizWordPool = [...words];
+                quizRound = 1;
+            }
+            
+            // 랜덤하게 단어 선택하고 풀에서 제거
+            const randomIndex = Math.floor(Math.random() * quizWordPool.length);
+            currentQuizWord = quizWordPool.splice(randomIndex, 1)[0];
+            
+            // 모든 단어를 다 사용했으면 새 라운드 시작
+            if (quizWordPool.length === 0) {
+                quizRound++;
+                quizWordPool = [...words];
+            }
+            
+            const wrongAnswers = words.filter(w => w.id !== currentQuizWord.id)
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 3);
+            
+            const allOptions = [currentQuizWord, ...wrongAnswers].sort(() => 0.5 - Math.random());
+            
+            document.getElementById('quizContent').innerHTML = `
+                <div class="text-center mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-sm text-gray-500">라운드 ${quizRound}</div>
+                        <div class="text-sm text-gray-500">남은 문제: ${quizWordPool.length + 1}</div>
+                    </div>
+                    <div class="flex items-center justify-center gap-3 mb-4">
+                        <h3 class="text-3xl font-bold text-gray-800">${currentQuizWord.word}</h3>
+                        <button onclick="speakWord('${currentQuizWord.word}')" class="bg-blue-100 hover:bg-blue-200 text-blue-600 p-3 rounded-lg transition-all">
+                            🔊
+                        </button>
+                    </div>
+                    <p class="text-gray-600 mb-8">다음 단어의 뜻을 고르세요:</p>
+                    <div class="grid gap-4 max-w-2xl mx-auto">
+                        ${allOptions.map(option => `
+                            <button onclick="checkAnswer('${option.meaning}', '${currentQuizWord.meaning}')" 
+                                    class="quiz-option p-4 bg-gray-100 hover:bg-blue-100 rounded-xl text-left transition-all border-2 border-transparent hover:border-blue-300">
+                                ${option.meaning}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+                <div id="quizResult" class="text-center mt-6"></div>
+                <button onclick="startQuiz()" class="w-full bg-green-500 text-white font-bold py-4 px-8 rounded-xl hover:bg-green-600 transition-all mt-6">
+                    🔄 다음 문제
+                </button>
+            `;
+        }
+
+        // 답안 확인
+        function checkAnswer(selected, correct) {
+            const result = document.getElementById('quizResult');
+            if (selected === correct) {
+                result.innerHTML = '<div class="text-green-600 font-bold text-xl">🎉 정답입니다!</div>';
+            } else {
+                result.innerHTML = `<div class="text-red-600 font-bold text-xl">❌ 다시 시도하세요<br><small class="text-gray-600">정답: ${correct}</small></div>`;
+            }
+        }
+
+        // 주관식 퀴즈 시작
+        function startHardQuiz() {
+            if (words.length === 0) {
+                showMessage('퀴즈를 시작하려면 최소 1개의 단어가 필요합니다.', 'error');
+                return;
+            }
+            
+            // 새로운 퀴즈 시작 시 초기화
+            if (hardQuizWordPool.length === 0 && hardQuizRound === 1 && roundScores.length === 0) {
+                hardQuizWordPool = [...words];
+                hardQuizRound = 1;
+                hardQuizScore = 0;
+                hardQuizTotal = 0;
+                roundScores = [];
+                currentRoundWrongAnswers = [];
+                showHardQuizRoundStart();
+                return;
+            }
+            
+            // 실제 퀴즈 문제 표시
+            showHardQuizQuestion();
+        }
+
+        // 라운드 시작 화면 표시
+        function showHardQuizRoundStart() {
+            let scoreDisplay = '';
+            if (roundScores.length > 0) {
+                const totalScore = roundScores.reduce((sum, round) => sum + round.score, 0);
+                const totalQuestions = roundScores.reduce((sum, round) => sum + round.total, 0);
+                
+                scoreDisplay = `
+                    <div class="bg-white bg-opacity-20 rounded-xl p-4 mb-4">
+                        <h3 class="text-lg font-semibold mb-3">📊 이전 라운드 결과</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            ${roundScores.map(round => 
+                                `<div>라운드 ${round.round}: ${round.score}/${round.total}점</div>`
+                            ).join('')}
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-white border-opacity-30">
+                            <div class="text-lg font-bold">총점: ${totalScore}/${totalQuestions}점 (${Math.round(totalScore/totalQuestions*100)}%)</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('hardQuizContent').innerHTML = `
+                <div class="text-center">
+                    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-2xl p-8 mb-8">
+                        <h2 class="text-4xl font-bold mb-4">🎯 라운드 ${hardQuizRound}</h2>
+                        <p class="text-xl mb-2">총 ${words.length}개의 단어를 학습합니다</p>
+                        ${scoreDisplay}
+                        <p class="text-lg opacity-90">준비되셨나요?</p>
+                    </div>
+                    <button onclick="showHardQuizQuestion()" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 px-12 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg text-xl">
+                        🚀 Start!
+                    </button>
+                </div>
+            `;
+        }
+
+        // 실제 퀴즈 문제 표시
+        function showHardQuizQuestion() {
+            // 라운드가 끝났는지 확인
+            if (hardQuizWordPool.length === 0) {
+                showRoundResult();
+                return;
+            }
+            
+            // 랜덤하게 단어 선택하고 풀에서 제거
+            const randomIndex = Math.floor(Math.random() * hardQuizWordPool.length);
+            currentHardQuizWord = hardQuizWordPool.splice(randomIndex, 1)[0];
+            
+            // 예문에서 정답 단어를 빈칸으로 처리
+            let processedExample = '';
+            if (currentHardQuizWord.example) {
+                const word = currentHardQuizWord.word;
+                const regex = new RegExp(`\\b${word}\\b`, 'gi');
+                processedExample = currentHardQuizWord.example.replace(regex, '_____');
+            }
+            
+            document.getElementById('hardQuizContent').innerHTML = `
+                <div class="text-center mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-sm text-gray-500">라운드 ${hardQuizRound}</div>
+                        <div class="text-sm text-gray-500">현재 점수: ${hardQuizScore}/${hardQuizTotal}</div>
+                        <div class="text-sm text-gray-500">남은 문제: ${hardQuizWordPool.length + 1}</div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">다음 뜻에 해당하는 단어를 입력하세요:</h3>
+                    <div class="bg-blue-50 p-6 rounded-xl mb-6">
+                        <p class="text-xl text-gray-800 mb-3">${currentHardQuizWord.meaning}</p>
+                        ${processedExample ? `<p class="text-gray-600"><em>예문: ${processedExample}</em></p>` : ''}
+                    </div>
+                    <input type="text" id="hardQuizInput" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none text-center text-xl mb-6" placeholder="답을 입력하세요">
+                    <button onclick="checkHardAnswer()" class="bg-purple-500 text-white font-bold py-4 px-8 rounded-xl hover:bg-purple-600 transition-all">
+                        ✅ 답안 확인
+                    </button>
+                </div>
+                <div id="hardQuizResult" class="text-center mt-6"></div>
+                <button onclick="continueQuiz()" class="w-full bg-purple-500 text-white font-bold py-4 px-8 rounded-xl hover:bg-purple-600 transition-all mt-6">
+                    🔄 다음 문제
+                </button>
+            `;
+            
+            // 입력 필드에 포커스
+            setTimeout(() => document.getElementById('hardQuizInput').focus(), 100);
+        }
+
+        // 주관식 답안 확인
+        function checkHardAnswer() {
+            const userAnswer = document.getElementById('hardQuizInput').value.trim().toLowerCase();
+            const correctAnswer = currentHardQuizWord.word.toLowerCase();
+            const result = document.getElementById('hardQuizResult');
+            
+            // 점수 업데이트
+            hardQuizTotal++;
+            if (userAnswer === correctAnswer) {
+                hardQuizScore++;
+                result.innerHTML = '<div class="text-green-600 font-bold text-xl">🎉 정답입니다!</div>';
+            } else {
+                // 오답 저장
+                currentRoundWrongAnswers.push({
+                    word: currentHardQuizWord.word,
+                    meaning: currentHardQuizWord.meaning,
+                    userAnswer: document.getElementById('hardQuizInput').value.trim(),
+                    example: currentHardQuizWord.example
+                });
+                result.innerHTML = `<div class="text-red-600 font-bold text-xl">❌ 다시 시도하세요<br><small class="text-gray-600">정답: ${currentHardQuizWord.word}</small></div>`;
+            }
+            
+            // 현재 점수 업데이트 표시
+            const scoreElement = document.querySelector('.text-sm.text-gray-500:nth-child(2)');
+            if (scoreElement) {
+                scoreElement.textContent = `현재 점수: ${hardQuizScore}/${hardQuizTotal}`;
+            }
+            
+            // 답안 확인 후 정답 단어 발음
+            setTimeout(() => {
+                speakWord(currentHardQuizWord.word);
+            }, 500);
+        }
+
+        // 퀴즈 계속하기
+        function continueQuiz() {
+            showHardQuizQuestion();
+        }
+
+        // 라운드 결과 표시
+        function showRoundResult() {
+            // 현재 라운드 점수 저장
+            roundScores.push({
+                round: hardQuizRound,
+                score: hardQuizScore,
+                total: hardQuizTotal,
+                wrongAnswers: [...currentRoundWrongAnswers]
+            });
+            
+            // 사용자 데이터 저장
+            saveUserData();
+            
+            const accuracy = Math.round((hardQuizScore / hardQuizTotal) * 100);
+            const totalScore = roundScores.reduce((sum, round) => sum + round.score, 0);
+            const totalQuestions = roundScores.reduce((sum, round) => sum + round.total, 0);
+            const overallAccuracy = Math.round((totalScore / totalQuestions) * 100);
+            
+            let wrongAnswersDisplay = '';
+            if (currentRoundWrongAnswers.length > 0) {
+                wrongAnswersDisplay = `
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
+                        <h4 class="text-lg font-bold text-red-800 mb-4">❌ 틀린 문제 복습</h4>
+                        <div class="space-y-4">
+                            ${currentRoundWrongAnswers.map(wrong => `
+                                <div class="bg-white p-4 rounded-lg border border-red-100">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="font-bold text-red-600">${wrong.word}</span>
+                                        <button onclick="speakWord('${wrong.word}')" class="bg-red-100 hover:bg-red-200 text-red-600 p-1 rounded transition-all text-sm">🔊</button>
+                                    </div>
+                                    <p class="text-gray-700 mb-1"><strong>뜻:</strong> ${wrong.meaning}</p>
+                                    <p class="text-red-600 text-sm"><strong>당신의 답:</strong> ${wrong.userAnswer || '(답 없음)'}</p>
+                                    ${wrong.example ? `<p class="text-gray-600 text-sm mt-2"><strong>예문:</strong> ${wrong.example}</p>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('hardQuizContent').innerHTML = `
+                <div class="text-center">
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl p-8 mb-8">
+                        <h2 class="text-4xl font-bold mb-4">🎉 라운드 ${hardQuizRound} 완료!</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white bg-opacity-20 rounded-xl p-4">
+                                <h3 class="text-lg font-semibold mb-2">이번 라운드</h3>
+                                <p class="text-2xl font-bold">${hardQuizScore}/${hardQuizTotal}점</p>
+                                <p class="text-lg">정확률: ${accuracy}%</p>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-xl p-4">
+                                <h3 class="text-lg font-semibold mb-2">전체 기록</h3>
+                                <p class="text-2xl font-bold">${totalScore}/${totalQuestions}점</p>
+                                <p class="text-lg">정확률: ${overallAccuracy}%</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${wrongAnswersDisplay}
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button onclick="startNextRound()" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 px-8 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg">
+                            🚀 다음 라운드 시작
+                        </button>
+                        <button onclick="resetQuiz()" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white font-bold py-4 px-8 rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg">
+                            🔄 퀴즈 다시 시작
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 다음 라운드 시작
+        function startNextRound() {
+            hardQuizRound++;
+            hardQuizScore = 0;
+            hardQuizTotal = 0;
+            currentRoundWrongAnswers = [];
+            hardQuizWordPool = [...words];
+            showHardQuizRoundStart();
+        }
+
+        // 퀴즈 리셋
+        function resetQuiz() {
+            hardQuizRound = 1;
+            hardQuizScore = 0;
+            hardQuizTotal = 0;
+            roundScores = [];
+            currentRoundWrongAnswers = [];
+            hardQuizWordPool = [];
+            
+            document.getElementById('hardQuizContent').innerHTML = `
+                <p class="text-gray-500 text-center py-8">고급 퀴즈를 시작하려면 최소 1개의 단어가 필요합니다.</p>
+                <button onclick="startHardQuiz()" class="w-full bg-purple-500 text-white font-bold py-4 px-8 rounded-xl hover:bg-purple-600 transition-all transform hover:scale-105 shadow-lg">
+                    🧠 고급 퀴즈 시작하기
+                </button>
+            `;
+        }
+
+        // 로그인 폼 이벤트 리스너
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                showMessage('사용자명과 비밀번호를 입력해주세요.', 'error');
+                return;
+            }
+            
+            const result = loginUser(username, password);
+            if (result.success) {
+                document.getElementById('loginModal').classList.add('hidden');
+                showMessage('로그인 성공! 🎉', 'success');
+                
+                // 언어 선택 모달 표시 (언어가 설정되지 않은 경우)
+                if (!currentLanguage) {
+                    document.getElementById('languageModal').classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('loginMessage').textContent = result.message;
+                document.getElementById('loginMessage').className = 'mt-4 text-center text-sm text-red-500';
+            }
+        });
+
+        // 회원가입 폼 이벤트 리스너
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+            
+            if (!username || !password || !passwordConfirm) {
+                showMessage('모든 필드를 입력해주세요.', 'error');
+                return;
+            }
+            
+            if (password !== passwordConfirm) {
+                showMessage('비밀번호가 일치하지 않습니다.', 'error');
+                return;
+            }
+            
+            const result = registerUser(username, password);
+            if (result.success) {
+                document.getElementById('registerModal').classList.add('hidden');
+                showMessage('회원가입 성공! 이제 로그인해주세요.', 'success');
+                showLoginForm();
+                
+                // 폼 초기화
+                document.getElementById('registerForm').reset();
+            } else {
+                document.getElementById('registerMessage').textContent = result.message;
+                document.getElementById('registerMessage').className = 'mt-4 text-center text-sm text-red-500';
+            }
+        });
+
+        // 사용자명 중복 체크 (실시간)
+        document.getElementById('registerUsername').addEventListener('input', function() {
+            const username = this.value.trim();
+            const checkElement = document.getElementById('usernameCheck');
+            
+            if (username.length === 0) {
+                checkElement.textContent = '';
+                checkElement.className = 'text-xs mt-1';
+            } else if (username.length < 3) {
+                checkElement.textContent = '사용자명은 3자 이상이어야 합니다.';
+                checkElement.className = 'text-xs mt-1 text-orange-500';
+            } else if (checkUsernameAvailability(username)) {
+                checkElement.textContent = '✅ 사용 가능한 사용자명입니다.';
+                checkElement.className = 'text-xs mt-1 text-green-500';
+            } else {
+                checkElement.textContent = '❌ 이미 사용 중인 사용자명입니다.';
+                checkElement.className = 'text-xs mt-1 text-red-500';
+            }
+        });
+
+        // 엔터키로 답안 확인
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && document.getElementById('hardQuizInput') && document.activeElement === document.getElementById('hardQuizInput')) {
+                checkHardAnswer();
+            }
+        });
+
+        // 메시지 표시
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 right-4 p-4 rounded-xl shadow-lg z-50 fade-in ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
